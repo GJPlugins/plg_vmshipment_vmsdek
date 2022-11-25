@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <extension version="2.5" type="plugin" group="vmshipment" method="upgrade">
     <name>Vmsdek</name>
-    <creationDate>25.11.22 15:53</creationDate>
+    <creationDate>25.11.22 16:03</creationDate>
     <author>Gartes</author>
     <authorUrl></authorUrl>
     <copyright>Copyright (C) 2005 - 2022 Gartes. All rights reserved.</copyright>
@@ -14,6 +14,12 @@
         <folder>tmpl</folder>
         <filename plugin="vmsdek">vmsdek.php</filename>
     </files>
+    <!-- Update servers -->
+    <updateservers>
+        <server type="extension" priority="1" name="vmsdek">
+            https://raw.githubusercontent.com/GJPlugins/plg_vmshipment_vmsdek/main/vmsdek-update.xml
+        </server>
+    </updateservers>
     <vmconfig>
         <fields name="params" addfieldpath="/libraries/GNZ11/Extensions/Fields">
             <fieldset name="extension">
