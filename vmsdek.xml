@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <extension version="2.5" type="plugin" group="vmshipment" method="upgrade">
     <name>Vmsdek</name>
-    <creationDate>25.11.22 15:28</creationDate>
+    <creationDate>25.11.22 15:53</creationDate>
     <author>Gartes</author>
     <authorUrl></authorUrl>
     <copyright>Copyright (C) 2005 - 2022 Gartes. All rights reserved.</copyright>
