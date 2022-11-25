@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<extension version="2.5" type="plugin" group="vmshipment" method="upgrade">
+    <name>Vmsdek</name>
+    <creationDate>25.11.22 15:28</creationDate>
+    <author>Gartes</author>
+    <authorUrl></authorUrl>
+    <copyright>Copyright (C) 2005 - 2022 Gartes. All rights reserved.</copyright>
+    <version>1.0.0</version>
+    <description>VMSHIPMENT_VMSDEK_PLUGIN_DESC</description>
+    <files>
+        <folder>assets</folder>
+        <folder>helpers</folder>
+        <folder>language</folder>
+        <folder>tmpl</folder>
+        <filename plugin="vmsdek">vmsdek.php</filename>
+    </files>
+    <vmconfig>
+        <fields name="params" addfieldpath="/libraries/GNZ11/Extensions/Fields">
+            <fieldset name="extension">
+                <!-- ! Требует наличие и подключения библиотеки GNZ11 -->
+                <field name="_extensionVersion"
+                       type="version"
+                       path_xml="/plugins/vmshipment/vmsdek/vmsdek.xml"
+                       class="_extensionVersion"
+                       filter="raw"/>
+            </fieldset>
+        </fields>
+    </vmconfig>
+</extension>
