@@ -13,7 +13,7 @@
  *----------------------------------------------------------------------------------------------------------------------
  *
  * @author     Gartes | sad.net79@gmail.com | Telegram : @gartes
- * @date       25.11.22 16:03
+ * @date       25.11.22 17:52
  * Created by PhpStorm.
  * @copyright  Copyright (C) 2005 - 2022 Open Source Matters, Inc. All rights reserved.
  * @license    GNU General Public License version 2 or later;
@@ -49,7 +49,7 @@ class plgVmshipmentVmsdek extends vmPSPlugin
      * @param $subject
      * @param $config
      *
-     * @date  25.11.22 16:03
+     * @date  25.11.22 17:52
      * @since 1.0.0
      */
     function __construct(&$subject, $config)

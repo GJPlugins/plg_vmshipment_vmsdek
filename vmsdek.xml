@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <extension version="2.5" type="plugin" group="vmshipment" method="upgrade">
     <name>Vmsdek</name>
-    <creationDate>25.11.22 16:03</creationDate>
+    <creationDate>25.11.22 17:52</creationDate>
     <author>Gartes</author>
     <authorUrl></authorUrl>
     <copyright>Copyright (C) 2005 - 2022 Gartes. All rights reserved.</copyright>
@@ -21,14 +21,27 @@
         </server>
     </updateservers>
     <vmconfig>
-        <fields name="params" addfieldpath="/libraries/GNZ11/Extensions/Fields">
-            <fieldset name="extension">
-                <!-- ! Требует наличие и подключения библиотеки GNZ11 -->
+        <fields name="params">
+            <fieldset name="extension" addfieldpath="/libraries/GNZ11/Extensions/Fields">
+                <!-- Версия APP ! Требует наличие и подключения библиотеки GNZ11 -->
                 <field name="_extensionVersion"
                        type="version"
                        path_xml="/plugins/vmshipment/vmsdek/vmsdek.xml"
                        class="_extensionVersion"
                        filter="raw"/>
+
+                <!-- Отладка APP -->
+                <field name="_debug_on"
+                       type="radio"
+                       default="0"
+                       label="VMSHIPMENT_VMSDEK_DEBUG_ON"
+                       description="VMSHIPMENT_VMSDEK_DEBUG_ON_DESC"
+                       class="btn-group btn-group-yesno"
+                       showon=""
+                >
+                    <option value="1">JYES</option>
+                    <option value="0">JNO</option>
+                </field>
             </fieldset>
         </fields>
     </vmconfig>
