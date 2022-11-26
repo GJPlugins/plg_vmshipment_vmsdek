@@ -13,7 +13,7 @@
  *----------------------------------------------------------------------------------------------------------------------
  *
  * @author     Gartes | sad.net79@gmail.com | Telegram : @gartes
- * @date       25.11.22 17:52
+ * @date       26.11.22 16:41
  * Created by PhpStorm.
  * @copyright  Copyright (C) 2005 - 2022 Open Source Matters, Inc. All rights reserved.
  * @license    GNU General Public License version 2 or later;
@@ -35,7 +35,7 @@ $doc = \Joomla\CMS\Factory::getDocument();
 
 if ( !empty($html_logos) )
 {
-    echo $html_logos;
+	echo $html_logos;
 }#END IF
 
 ?>
@@ -47,9 +47,9 @@ if ( !empty($html_logos) )
 // Описание метода
 if ( !empty($description) )
 {
-    ?>
+	?>
     <span class="<?= $_type ?>_description plg_<?= $_element ?>">
         <?= $description ?>
     </span>
-    <?php
+	<?php
 }#END IF
