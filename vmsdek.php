@@ -25,6 +25,7 @@ use GNZ11\Core\Js;
 use Joomla\CMS\Filesystem\Folder;
 use Joomla\CMS\Uri\Uri;
 use Vmsdek\Helper;
+use Vmsdek\SdekHelper;
 
 /**
  * Плагин Доставки Vmsdek для Virtuemart
@@ -740,7 +741,20 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 	{
 		$app    = \Joomla\CMS\Factory::getApplication();
 		$task   = $app->input->get('task', 'testConnect', 'STRING');
-		$Helper = Helper::instance();
+		$helperName = $app->input->get('helper', '\Vmsdek\Helper', 'STRING' );
+
+		$methodId = $app->input->get('methodId', false , 'INT' );
+		$method = [] ;
+		if ( $methodId )
+		{
+			// Получить настройки способа доставки
+			$method = (array) $this->getVmPluginMethod( $methodId );
+		}#END IF
+		/**
+		 * @var SdekHelper|Helper $Helper
+		 */
+		$Helper = $helperName::instance( $method );
+
 		if ( !method_exists($Helper, $task) )
 		{
 			echo new JResponseJson(null, 'METHOD \Vmsdek\Helper::' . $task . ' NOT EXISTS', false);
