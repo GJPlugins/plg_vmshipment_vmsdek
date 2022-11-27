@@ -50,6 +50,7 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 	 * @param $config
 	 *
 	 * @date  26.11.22 19:25
+	 * @throws Exception
 	 * @since 1.0.0
 	 */
 	function __construct(&$subject, $config)
@@ -277,8 +278,9 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 	 * @param   array           $order  The actual order saved in the DB
 	 *
 	 * @return bool|null Null when this method was not selected, otherwise true
-	 * @author Valerie Isaksen
+	 * @throws Exception
 	 * @since  1.0.0
+	 * @author Valerie Isaksen
 	 */
 	public function plgVmConfirmedOrder(VirtueMartCart $cart, array $order): ?bool
 	{
@@ -673,8 +675,12 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 	 */
 	protected function renderPluginName($plugin)
 	{
+		$_extensionVersion = Helper::getExtensionVersion();
+		$doc = \Joomla\CMS\Factory::getDocument();
+		$doc->addStyleSheet('/plugins/vmshipment/vmsdek/assets/css/plg_vmshipment_vmsdek.core.css?v='.$_extensionVersion);
+
 		Helper::initGnz11();
-		Js::addJproLoad(Uri::root() . 'plugins/vmshipment/vmsdek/assets/js/plg_vmshipment_vmsdek.core.js');
+		Js::addJproLoad(Uri::root() . 'plugins/vmshipment/vmsdek/assets/js/plg_vmshipment_vmsdek.core.js?v='.$_extensionVersion);
 
 		static $c = array();
 		$idN = 'virtuemart_' . $this->_psType . 'method_id';
@@ -716,6 +722,8 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 		$c[ $this->_psType ][ $plugin->{$idN} ] = $this->renderByLayout('plugin_name', $data);
 		// Макет для дополнительных полей
 		$c[ $this->_psType ][ $plugin->{$idN} ] .= $this->renderByLayout('additional_fields', $data);
+
+		$c[ $this->_psType ][ $plugin->{$idN} ] .= $this->renderByLayout('plugin_svg', $data);
 
 		return $c[ $this->_psType ][ $plugin->{$idN} ];
 	}
