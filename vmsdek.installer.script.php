@@ -13,7 +13,7 @@
  *----------------------------------------------------------------------------------------------------------------------
  *
  * @author     Gartes | sad.net79@gmail.com | Telegram : @gartes
- * @date       26.11.22 16:41
+ * @date       26.11.22 19:25
  * Created by PhpStorm.
  * @copyright  Copyright (C) 2005 - 2022 Open Source Matters, Inc. All rights reserved.
  * @license    GNU General Public License version 2 or later;
@@ -30,7 +30,8 @@ use Joomla\CMS\Installer\Adapter\PluginAdapter;
  *
  * @copyright   Copyright (C) 2005 - 2022 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
- * @since       3.9
+ * @documentation https://docs.joomla.org/J3.x:Developing_an_MVC_Component/Adding_an_install-uninstall-update_script_file
+ * @since       1.0.0
  */
 class PlgVmshipmentVmsdekInstallerScript
 {

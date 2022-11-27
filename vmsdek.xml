@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <extension version="2.5" type="plugin" group="vmshipment" method="upgrade">
     <name>Vmsdek</name>
-    <creationDate>26.11.22 16:41</creationDate>
+    <creationDate>26.11.22 19:25</creationDate>
     <author>Gartes</author>
     <authorUrl></authorUrl>
     <copyright>Copyright (C) 2005 - 2022 Gartes. All rights reserved.</copyright>
@@ -36,7 +36,7 @@
                        filter="raw"/>
 
                 <!-- Отладка APP -->
-                <field name="_debug_on"
+                <field name="debug_on"
                        type="radio"
                        default="0"
                        label="VMSHIPMENT_VMSDEK_DEBUG_ON"

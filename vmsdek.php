@@ -13,7 +13,7 @@
  *----------------------------------------------------------------------------------------------------------------------
  *
  * @author     Gartes | sad.net79@gmail.com | Telegram : @gartes
- * @date       26.11.22 16:41
+ * @date       26.11.22 19:25
  * Created by PhpStorm.
  * @copyright  Copyright (C) 2005 - 2022 Open Source Matters, Inc. All rights reserved.
  * @license    GNU General Public License version 2 or later;
@@ -49,7 +49,7 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 	 * @param $subject
 	 * @param $config
 	 *
-	 * @date  26.11.22 16:41
+	 * @date  26.11.22 19:25
 	 * @since 1.0.0
 	 */
 	function __construct(&$subject, $config)
@@ -64,6 +64,9 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 		$this->_tablepkey   = 'id'; //virtuemart_order_id';
 		$this->_idName      = 'virtuemart_' . $this->_psType . 'method_id';
 		$this->_configTable = '#__virtuemart_' . $this->_psType . 'methods';
+
+		$varsToPush = $this->getVarsToPush();
+		$this->setConfigParameterable($this->_configTableFieldName, $varsToPush);
 
 		$this->_extensionVersion = Helper::getExtensionVersion();
 	}
@@ -253,6 +256,17 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 	}
 
 	/**
+	 * Системное событие перед созданием Head page
+	 *
+	 * @return void
+	 * @since 1.0.0
+	 */
+	public function onBeforeCompileHead()
+	{
+
+	}
+
+	/**
 	 * Это событие запускается после сохранения заказа; он получает способ доставки-
 	 * конкретные данные.
 	 * ---
@@ -300,7 +314,9 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 	}
 
 	/**
-	 * TODO - Добавить описание метода в шаблон
+	 * Срабатывает на странице настройки способа доставки этого плагина для VM2 Version
+	 * ---
+	 * Может использоваться для загрузки скриптов UI
 	 *
 	 * @param $name
 	 * @param $id
@@ -315,16 +331,29 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 	}
 
 	/**
-	 * TODO - Добавить описание метода в шаблон
+	 * Срабатывает на странице настройки способа доставки этого плагина для VM3 Version
+	 * ---
+	 * Может использоваться для загрузки скриптов UI
 	 *
 	 * @param $data
 	 *
 	 * @return bool
+	 * @throws Exception
 	 * @since 1.0.0
 	 */
 	function plgVmDeclarePluginParamsShipmentVM3(&$data): bool
 	{
+		$app = \Joomla\CMS\Factory::getApplication();
+		// Проверяем что находимся именно в режиме редактирования нужного метода (Доставка|Оплата)
+		if ( $app->isClient('administrator') && $this->_name == 'vmsdek' )
+		{
+			$method = $this->getVmPluginMethod( $data->virtuemart_shipmentmethod_id );
+			Helper::addScriptOptionsMethodParams( $method );
+			Helper::addAssetsAdmin();
+
+		}#END IF
 		return $this->declarePluginParams('shipment', $data);
+
 	}
 
 	/**
@@ -361,7 +390,7 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 	 * Checks how many plugins are available. If only one, the user will not have the choice. Enter edit_xxx page
 	 * The plugin must check first if it is the correct type
 	 *
-	 * @param   VirtueMartCart cart: the cart object
+	 * @param   VirtueMartCart  $cart  the cart object
 	 *
 	 * @return null Если плагин не найден, 0 если найдено более одного плагина, virginmart_xxx_id если найден только
 	 *              один плагин if no plugin was found, 0 if more then one plugin was found,  virtuemart_xxx_id if only
@@ -667,17 +696,26 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 		}
 
 		$data = [
-			"_extensionVersion" => $this->_extensionVersion,
-			"_element"          => $plugin->element,
-			"_type"             => $this->_type,
-			"method_name"       => $plugin->{$plugin_name},
-			"description"       => $plugin->{$plugin_desc},
-			"html_logos"        => $htmlLogos,
+			"_extensionVersion"            => $this->_extensionVersion,
+			// TODO - определять для (Оплата|Доставка)
+			"virtuemart_shipmentmethod_id" => $plugin->virtuemart_shipmentmethod_id,
+			"selectorInputElement"         => 'shipment_id_' . $plugin->virtuemart_shipmentmethod_id,
+			// -------------------------------------------
+			"element"                      => $plugin->element,
+			"folder"                       => $plugin->folder,
+			"type"                         => $plugin->type,
+			"_type"                        => $this->_type,
+			"method_name"                  => $plugin->{$plugin_name},
+			"description"                  => $plugin->{$plugin_desc},
+			"html_logos"                   => $htmlLogos,
+
 		];
 		// Добавляем данные для JS скриптов
 		Helper::addScriptOptions($data);
 
 		$c[ $this->_psType ][ $plugin->{$idN} ] = $this->renderByLayout('plugin_name', $data);
+		// Макет для дополнительных полей
+		$c[ $this->_psType ][ $plugin->{$idN} ] .= $this->renderByLayout('additional_fields', $data);
 
 		return $c[ $this->_psType ][ $plugin->{$idN} ];
 	}

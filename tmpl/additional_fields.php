@@ -30,26 +30,7 @@ defined('_JEXEC') or die('Restricted access');
  */
 extract($viewData);
 
+/**
+ * Макет для вывода дополнительных полей (Доставка|Оплата)
+ */
 
-
-
-if ( !empty($html_logos) )
-{
-	echo $html_logos;
-}#END IF
-
-?>
-    <span class="<?= $_type ?>_name plg_<?= $_element ?>">
-        <?= $method_name ?>
-    </span>
-
-<?php
-// Описание метода
-if ( !empty($description) )
-{
-	?>
-    <span class="<?= $_type ?>_description plg_<?= $_element ?>">
-        <?= $description ?>
-    </span>
-	<?php
-}#END IF

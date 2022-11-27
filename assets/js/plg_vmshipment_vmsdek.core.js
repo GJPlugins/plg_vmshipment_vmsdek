@@ -9,7 +9,7 @@
  *  ///////////////////////////╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╰╯/////////////////////////////////
  *----------------------------------------------------------------------------------------------------------------------
  * @author Gartes | sad.net79@gmail.com | Telegram : @gartes
- * @date 26.11.22 16:41
+ * @date 26.11.22 19:25
  * Created by PhpStorm.
  * @copyright  Copyright (C) 2005 - 2022 Open Source Matters, Inc. All rights reserved.
  * @license    GNU General Public License version 2 or later;
@@ -52,78 +52,13 @@ window.plg_Vmshipment_Vmsdek_Core = function () {
         this.addEvtListener();
         // Перехват событий JoomlaSubmit 
         this.JoomlaSubmitInit();
-
+        console.log( 'plg_vmshipment_vmsdek.core' , this._params );
+        
         // тестирования связи с сервером PlgVmshipmentVmsdekCore.testAjax()
         // для запуска из консоли 
         // this.testAjax();
     }
-    /**
-     * Парсим сообщения из ответа APP - и вывод в Noty
-     * для переопределения стандартного в метод this.Init добавить :
-     *  - Joomla.renderMessages = self.renderMessages
-     *  для переопределения за пределами obj
-     *  - Joomla.renderMessages = PlgVmshipmentVmsdekCore.renderMessages
-     *
-     * @param messages - obj - c массивами сообщений от App
-     */
-    this.renderMessages = function (messages) {
 
-        // Типы сообщений Joomla
-        var TypesJoomla = ['error', 'message', 'notice', 'warning',];
-
-        self.__loadModul.Noty({}).then(function () {
-            var TypesMes, mess, indexTypesJoomla = 0;
-            render();
-
-            function render() {
-                TypesMes = TypesJoomla[indexTypesJoomla];
-                if (!messages.hasOwnProperty(TypesMes) && indexTypesJoomla < TypesJoomla.length - 1) {
-                    indexTypesJoomla++;
-                    render();
-                    return;
-                }
-                printNoty(messages[TypesMes]);
-            }
-
-            // Собрать из массива сообщений строку
-            function printNoty(mess) {
-                var _nType,
-                    messageWrapper = ''
-                ;
-                // Add messages to the message box
-                for (var i = mess.length - 1; i >= 0; i--) {
-                    messageWrapper += mess[i] + "\n";
-                }
-
-                switch (TypesMes) {
-                    case 'notice':
-                        // _nType = 'alert';
-                        // _nType = 'success';
-                        _nType = 'info';
-                        break;
-                    case 'warning':
-                        _nType = 'warning'
-                        break;
-                    case 'error':
-                        _nType = 'error'
-                        break;
-                    default :
-                        _nType = 'success'
-                }
-                new window.Noty({
-                    type: _nType,
-                    text: TypesMes + ' => ' + messageWrapper,
-                    layout: 'bottomRight',
-                    timeout: 8000,
-                }).show();
-                console.log('plg_vmshipment_vmsdek.core', TypesMes, messageWrapper);
-                if (indexTypesJoomla < TypesJoomla.length - 1) {
-                    indexTypesJoomla++;
-                    setTimeout(render, 1000)
-                }
-            }
-        })
-    }
     /**
      * Метод тестирования связи с сервером
      * -----------------------------------

@@ -13,7 +13,7 @@
  *----------------------------------------------------------------------------------------------------------------------
  *
  * @author     Gartes | sad.net79@gmail.com | Telegram : @gartes
- * @date       26.11.22 16:41
+ * @date       26.11.22 19:25
  * Created by PhpStorm.
  * @copyright  Copyright (C) 2005 - 2022 Open Source Matters, Inc. All rights reserved.
  * @license    GNU General Public License version 2 or later;
@@ -26,6 +26,8 @@ use Exception;
 use GNZ11\Core\Js;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Filesystem\Folder;
+use Joomla\CMS\Uri\Uri;
+use TableShipmentmethods;
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
@@ -79,6 +81,48 @@ class Helper
 	}#END FN
 
 	/**
+	 * Добавить параметры метода доставки|оплаты для JS скрипта
+	 * @param TableShipmentmethods $method
+	 *
+	 * @return void
+	 * @throws Exception
+	 * @since 3.9
+	 */
+	public static function addScriptOptionsMethodParams(TableShipmentmethods $method)
+	{
+		self::getExtensionVersion();
+		echo'<pre>';print_r( $method );echo'</pre>'.__FILE__.' '.__LINE__;
+		
+		$addOptions = [
+			'shipment_name' => $method->shipment_name ,
+			'shipment_element' => $method->shipment_element ,
+			'virtuemart_shipmentmethod_id' => $method->virtuemart_shipmentmethod_id ,
+			'debug_on' => $method->debug_on ,
+		];
+
+		$scriptOptions = self::getScriptOptions();
+		$scriptOptions = array_merge($scriptOptions, $addOptions);
+
+		self::addScriptOptions($scriptOptions);
+	}
+
+	/**
+	 * Загрузка ресурсов в админ панели
+	 * ---
+	 *
+	 * @throws Exception
+	 * @since 3.9
+	 */
+	public static function addAssetsAdmin()
+	{
+		self::initGnz11();
+		$_extensionVersion = self::getExtensionVersion();
+		$doc = Factory::getDocument();
+		$doc->addStyleSheet('/plugins/vmshipment/vmsdek/assets/css/plg_vmshipment_vmsdek.admin.core.css?v='.$_extensionVersion);
+		Js::addJproLoad(Uri::root() . 'plugins/vmshipment/vmsdek/assets/js/plg_vmshipment_vmsdek.admin.core.js?v='.$_extensionVersion);
+	}
+
+	/**
 	 * Init - GNZ11 LIBRARY
 	 * ---
 	 *
@@ -113,6 +157,7 @@ class Helper
 	 * Получить версию расширения Vmshipment Vmsdek
 	 *
 	 * @return mixed
+	 * @throws Exception
 	 * @since 1.0.0
 	 */
 	public static function getExtensionVersion()
@@ -124,7 +169,17 @@ class Helper
 		$dom      = new DOMDocument("1.0", "utf-8");
 		$dom->load($xml_file);
 		$_extensionVersion = $dom->getElementsByTagName('version')->item(0)->textContent;
-		self::addScriptOptions(['_extensionVersion' => $_extensionVersion]);
+
+		$app = \Joomla\CMS\Factory::getApplication();
+
+		$scriptOptions = [
+			'_extensionVersion' => $_extensionVersion ,
+			'option' => $app->input->get('option' , null , 'STRING') ,
+			'view' => $app->input->get('view' , null , 'STRING') ,
+			'task' => $app->input->get('task' , null , 'STRING') ,
+
+		];
+		self::addScriptOptions( $scriptOptions );
 
 		return $_extensionVersion;
 	}
@@ -172,6 +227,13 @@ class Helper
 		$app->enqueueMessage('Notice - Test Connect is OK!', 'notice');
 		$app->enqueueMessage('Warning - Test Connect is OK!', 'warning');
 		$app->enqueueMessage('Error - Test Connect is OK!', 'error');
+
+		$option = $app->input->get('option', false, 'STRING');
+		$view = $app->input->get('view', false, 'STRING');
+		$task = $app->input->get('task', false, 'STRING');
+		$app->enqueueMessage('System - option ' . $option );
+		$app->enqueueMessage('System - view ' . $view );
+		$app->enqueueMessage('System - task ' . $task );
 
 		return ['testConnectResult' => 'OK'];
 	}
