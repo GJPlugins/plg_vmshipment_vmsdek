@@ -699,7 +699,7 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 			"_extensionVersion"            => $this->_extensionVersion,
 			// TODO - определять для (Оплата|Доставка)
 			"virtuemart_shipmentmethod_id" => $plugin->virtuemart_shipmentmethod_id,
-			"selectorInputElement"         => 'shipment_id_' . $plugin->virtuemart_shipmentmethod_id,
+			"selectorInputElement"         => '#shipment_id_' . $plugin->virtuemart_shipmentmethod_id,
 			// -------------------------------------------
 			"element"                      => $plugin->element,
 			"folder"                       => $plugin->folder,
