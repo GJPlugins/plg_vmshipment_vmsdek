@@ -39,6 +39,12 @@ defined('_JEXEC') or die('Restricted access');
  */
 class Helper
 {
+    /**
+     * Ключ данных User State
+     * @var string
+     * @since 3.9
+     */
+    protected string $keyUserState = 'Vmshipment.Vmsdek.data_user' ;
 
 	/**
 	 * @var bool Gnz11 - is Loaded
@@ -76,8 +82,7 @@ class Helper
 		{
 			self::$instance = new self($options);
 		}
-
-		return self::$instance;
+        return self::$instance;
 	}#END FN
 
 	/**
@@ -91,13 +96,14 @@ class Helper
 	public static function addScriptOptionsMethodParams(TableShipmentmethods $method)
 	{
 		self::getExtensionVersion();
-		echo'<pre>';print_r( $method );echo'</pre>'.__FILE__.' '.__LINE__;
-		
+
 		$addOptions = [
 			'shipment_name' => $method->shipment_name ,
 			'shipment_element' => $method->shipment_element ,
 			'virtuemart_shipmentmethod_id' => $method->virtuemart_shipmentmethod_id ,
 			'debug_on' => $method->debug_on ,
+			'view' => \JFactory::getApplication()->input->get('view' , false , "STRING") ,
+
 		];
 
 		$scriptOptions = self::getScriptOptions();
@@ -170,7 +176,7 @@ class Helper
 		$dom->load($xml_file);
 		$_extensionVersion = $dom->getElementsByTagName('version')->item(0)->textContent;
 
-		$app = \Joomla\CMS\Factory::getApplication();
+		$app = Factory::getApplication();
 
 		$scriptOptions = [
 			'_extensionVersion' => $_extensionVersion ,
@@ -214,12 +220,67 @@ class Helper
 		$doc->addScriptOptions($key, $dataArr);
 	}
 
-	/**
-	 * Метод проверки связи JS & Server
-	 *
-	 * @return array
-	 * @since 1.0.0
-	 */
+    /**
+     * Получить данные User State
+     * @return array
+     * @throws Exception
+     * @since 3.9
+     */
+    public function getUserStateForm(): array
+    {
+        $app = Factory::getApplication();
+        $userState = $app->getUserState(  $this->keyUserState , []   );
+
+        self::addScriptOptions( $userState );
+        return $userState ;
+    }
+
+    /**
+     * Сохранить данные пользователя User State
+     * @return bool
+     * @throws Exception
+     * @since 3.9
+     */
+    public function setUserStateForm(): bool
+    {
+        $app = Factory::getApplication();
+        $formData = $app->input->get('formData' , false , 'RAW' );
+        /**
+         * Пространство имен для полей etc/ <input type="text" name="Vmsdek[address_house]" value="">
+         * - для того чтобы не сохранять данные всей формы
+         */
+        $fieldNameSpace = $app->input->get('fieldNameSpace' , 'Vmsdek' , 'STRING' );
+        $data = [] ;
+        parse_str($formData , $data );
+
+        $app->setUserState(  $this->keyUserState , $data[$fieldNameSpace] );
+
+        $app->enqueueMessage('Данные сохранены в сессию. Ключ:' . $this->keyUserState );
+        return true ;
+    }
+
+    /**
+     * Удалить все данные для APP из User State
+     * --- Используется в основном для отладки APP
+     * @return bool
+     * @throws Exception
+     * @since 3.9
+     */
+    public function cleanUserStateForm(): bool
+    {
+        $app = Factory::getApplication();
+        $app->setUserState(  $this->keyUserState , [] );
+        $app->enqueueMessage('Все данные User State удалены. Ключ:' . $this->keyUserState );
+        return true ;
+    }
+
+    /**
+     * Метод проверки связи JS & Server
+     *
+     * @return array
+     * @throws Exception
+     * @since 1.0.0
+     */
 	public function testConnect(): array
 	{
 		$app = Factory::getApplication();

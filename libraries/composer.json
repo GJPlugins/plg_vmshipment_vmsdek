@@ -1,0 +1,15 @@
+{
+    "name": "gartes/libraries",
+    "authors": [
+        {
+            "name": "gartes",
+            "email": "sad.net79@gmail.com"
+        }
+    ],
+    "require": {
+        "cdek-it/sdk2.0": "^0.1.5",
+        "psr/http-client": "^1.0",
+        "symfony/http-client": "^5.4",
+      "ext-json": "*"
+    }
+}

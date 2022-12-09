@@ -42,23 +42,55 @@ window.plg_Vmshipment_Vmsdek_Core = function () {
         // Название метода (Оплатs|Доставки)
         method_name: '',
     }
+    this._params = {
+        selectorInputElement : false ,
+        virtuemart_method_id : 0 ,
+    }
     /**
      * Start Init
      * @constructor
      */
     this.Init = function () {
         this._params = Joomla.getOptions('Vmshipment.Vmsdek', this.ParamsDefaultData);
+        // В параметры запроса добавить method Id
+        this.AjaxDefaultData.methodId = this._params.virtuemart_method_id ;
+
         // Добавить слушателей событий
         this.addEvtListener();
         // Перехват событий JoomlaSubmit 
         this.JoomlaSubmitInit();
+
+        this.LoadScriptElement();
+
+
         console.log( 'plg_vmshipment_vmsdek.core' , this._params );
         
         // тестирования связи с сервером PlgVmshipmentVmsdekCore.testAjax()
         // для запуска из консоли 
         // this.testAjax();
     }
+    this.addChosenSelect = function (){
+        self.load.js('/plugins/vmshipment/vmsdek/assets/chosen/chosen.jquery.js').then(
+            function (){
+                /*$('select[name="pickups"]').chosen({disable_search_threshold: 10}).change(function(){
+                    var id = $(this).val();
+                    console.log( 'plg_vmshipment_vmsdek.core::' , id ); 
 
+                });*/
+            },
+            function (err){console.log( 'plg_vmshipment_vmsdek.core::' , err );})
+       /* setTimeout(function (){
+
+        },5000)*/
+    }
+
+    /**
+     * Дозагрузка файла скрипта plg_script_vmsdek
+     * @constructor
+     */
+    this.LoadScriptElement = function () {
+        self.load.js('/plugins/vmshipment/vmsdek/assets/js/plg_script_vmsdek.js?v='+this._params._extensionVersion );
+    }
     /**
      * Метод тестирования связи с сервером
      * -----------------------------------
@@ -88,6 +120,18 @@ window.plg_Vmshipment_Vmsdek_Core = function () {
      *          </a>
      */
     this.addEvtListener = function () {
+
+        // Вешаем на все способы доставки слушателя "change"
+        document.querySelectorAll('[name="virtuemart_shipmentmethod_id"]').forEach(item => {
+            item.addEventListener('change', event => {
+                if ( + event.target.value === + self._params.virtuemart_method_id ){
+                    self.methodSelected(true);
+                }else {
+                    self.methodSelected(false);
+                }
+            })
+        })
+
         // Event - change
         document.addEventListener('change', function (e) {
             console.log('plg_vmshipment_vmsdek.core', e.target.dataset);
@@ -114,8 +158,15 @@ window.plg_Vmshipment_Vmsdek_Core = function () {
             if ($(e.target).hasClass('translite')) {
 
             }
-            console.log('com_customfilters.administrator.core', e.target);
+
         });
+    }
+    /**
+     * Обработчик события - изменения способа (Доставка|Оплата)
+     * @param checkedMethod TRUE - Если выбран -
+     */
+    this.methodSelected = function (checkedMethod){
+        
     }
     /**
      * Установка перехвата для событий Joomla.submitbutton
@@ -179,6 +230,23 @@ window.plg_Vmshipment_Vmsdek_Core = function () {
             });
         });
     };
+    /**
+     * Удалить все данные User State - Используется для отладки
+     * Use: PlgVmshipmentVmsdekCore.cleanUserStateForm()
+     */
+    this.cleanUserStateForm = function (){
+        const Data = JSON.parse(JSON.stringify(self.AjaxDefaultData));
+        Data.helper = '\\Vmsdek\\Helper';
+        Data.task = 'cleanUserStateForm';
+        self.AjaxPost(Data, {}).then(function (r) {
+            if (+self._params.debug_on === 1 ){
+                self.renderMessages(r.messages)
+            }
+
+            console.log( 'plg_script_vmsdek :: setUserState' , self._params.debug_on );
+            console.log( 'plg_script_vmsdek :: setUserState' , r );
+        },function (err){console.log( 'plg_script_vmsdek :: setUserState' , err );});
+    }
     this.Init();
 };
 

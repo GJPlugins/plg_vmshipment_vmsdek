@@ -22,6 +22,7 @@
 defined('_JEXEC') or die('Restricted access');
 
 use GNZ11\Core\Js;
+use Joomla\CMS\Factory;
 use Joomla\CMS\Filesystem\Folder;
 use Joomla\CMS\Uri\Uri;
 use Vmsdek\Helper;
@@ -45,10 +46,35 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 	 * @since 1.0.0
 	 */
 	protected $_extensionVersion = '1.0.0';
+    /**
+     * Селектор для элемента выбора сладов для получения
+     * @var string
+     * @since 3.9
+     */
+    protected string $name_select_pickup = 'vm_sdek[pickups]' ;
+    /**
+     * Селектор для ID - офиса
+     * ---
+     * @var string
+     * @since 3.9
+     */
+    protected string $name_hidden_office_id = 'vm_sdek[office_id]' ;
 
-	/**
+    /**
+     * Селектор для ввода названия города в модальном окне - Autocomplete
+     * @var string
+     * @since 3.9
+     */
+    protected string $name_input_city_modal__autocomplete = '.Vmsdek-CitySelectForm .autocomplete__input' ;
+    /**
+     * @var int[]|string[]
+     * @since 3.9
+     */
+    protected array $tableFields;
+
+    /**
 	 * @param $subject
-	 * @param $config
+	 * @param $config - Параметры плагина vmshipment
 	 *
 	 * @date  26.11.22 19:25
 	 * @throws Exception
@@ -56,19 +82,23 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 	 */
 	function __construct(&$subject, $config)
 	{
+
+
 		// Регистрируем Библиотеку GNZ11
 		JLoader::registerNamespace('GNZ11', JPATH_LIBRARIES . '/GNZ11', false, false, 'psr4');
 		// Регистрируем Namespace Vmsdek для Helpers
 		JLoader::registerNamespace('Vmsdek', JPATH_PLUGINS . '/vmshipment/vmsdek/helpers', false, false, 'psr4');
 
 		parent::__construct($subject, $config);
-
+        $this->_loggable = TRUE;
 		$this->_tablepkey   = 'id'; //virtuemart_order_id';
+        $this->_tableId = 'id';
 		$this->_idName      = 'virtuemart_' . $this->_psType . 'method_id';
 		$this->_configTable = '#__virtuemart_' . $this->_psType . 'methods';
+        $this->tableFields = array_keys ( $this->getTableSQLFields () );
 
 		$varsToPush = $this->getVarsToPush();
-		$this->setConfigParameterable($this->_configTableFieldName, $varsToPush);
+        $this->setConfigParameterable($this->_configTableFieldName, $varsToPush);
 
 		$this->_extensionVersion = Helper::getExtensionVersion();
 	}
@@ -152,18 +182,42 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 		return $img;
 	}
 
-	/**
-	 * Получить стоимость доставки
-	 *
-	 * @param   VirtueMartCart  $cart
-	 * @param   stdClass        $method
-	 * @param   Array           $cart_prices
-	 *
-	 * @return int
-	 * @since 1.0.0
-	 */
+    /**
+     * Получить стоимость доставки
+     *
+     * @param VirtueMartCart $cart
+     * @param stdClass $method
+     * @param Array $cart_prices
+     *
+     * @return int
+     * @throws Exception
+     * @since 1.0.0
+     */
 	public function getCosts(VirtueMartCart $cart, $method, $cart_prices): int
 	{
+        $app = \Joomla\CMS\Factory::getApplication();
+
+        $registry = new JRegistry($method);
+        $methodParams = $registry->toArray();
+
+        $SdekHelper = SdekHelper::instance($methodParams);
+        $Helper = Helper::instance( $methodParams );
+        $userState = $SdekHelper->getUserStateForm();
+
+
+
+        if ( isset( $userState['city_id'] ) && !empty($userState['city_id']) )
+        {
+            $costsResult = $SdekHelper->getCosts( $userState['city_id'] , $cart , $userState['delivery_type'] );
+
+            // Стоимость доставки + доплата за упаковку !
+            return $costsResult->delivery_sum   ;
+           
+        }#END IF
+
+
+
+
 		if ( $method->free_shipment && $cart_prices[ 'salesPrice' ] >= $method->free_shipment )
 		{
 			return 0.0;
@@ -173,7 +227,11 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 			if ( empty($method->shipment_cost) ) $method->shipment_cost = 0.0;
 			if ( empty($method->package_fee) ) $method->package_fee = 0.0;
 
-			return $method->shipment_cost + $method->package_fee;
+            $result = $method->shipment_cost + $method->package_fee ;
+
+
+
+			return $result ;
 		}
 	}
 
@@ -207,10 +265,28 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 		$taxDisplay = is_array($tax) ? $tax[ 'calc_value' ] . ' ' . $tax[ 'calc_value_mathop' ] : $shipinfo->tax_id;
 		$taxDisplay = ($taxDisplay == -1) ? vmText::_('COM_VIRTUEMART_PRODUCT_TAX_NONE') : $taxDisplay;
 
+//        echo'<pre>';print_r( $shipinfo );echo'</pre>'.__FILE__.' '.__LINE__;
+//        die(__FILE__ .' '. __LINE__ );
+
+
 		$html = '<table class="adminlist table">' . "\n";
 		$html .= $this->getHtmlHeaderBE();
 		$html .= $this->getHtmlRowBE('WEIGHT_COUNTRIES_SHIPPING_NAME', $shipinfo->shipment_name);
-		$html .= $this->getHtmlRowBE('WEIGHT_COUNTRIES_WEIGHT', $shipinfo->order_weight . ' ' . ShopFunctions::renderWeightUnit($shipinfo->shipment_weight_unit));
+
+        $html .= $this->getHtmlRowBE('VMSDEK_SHIPMENT_CITY', $shipinfo->shipment_city .', '. $shipinfo->region_name . ', '. $shipinfo->country_name );
+        if ( $shipinfo->delivery_type == 4  )
+        {
+            $pickups_name = $shipinfo->pickups_name . '(' . $shipinfo->pickups. ')' ;
+            $html .= $this->getHtmlRowBE('VMSDEK_SHIPMENT_PVZ', $pickups_name   );
+        }else{
+            $address = $shipinfo->street ;
+            $address .= empty( $shipinfo->house )?: ' Дом: ' . $shipinfo->house ;
+            $address .= empty( $shipinfo->flat )?: ' кв.: ' . $shipinfo->flat ;
+            $html .= $this->getHtmlRowBE('VMSDEK_SHIPMENT_ADDRESS', $address   );
+        }#END IF
+
+
+        $html .= $this->getHtmlRowBE('WEIGHT_COUNTRIES_WEIGHT', $shipinfo->order_weight . ' ' . ShopFunctions::renderWeightUnit($shipinfo->shipment_weight_unit));
 		$html .= $this->getHtmlRowBE('WEIGHT_COUNTRIES_COST', $currency->priceDisplay($shipinfo->shipment_cost));
 		$html .= $this->getHtmlRowBE('WEIGHT_COUNTRIES_PACKAGE_FEE', $currency->priceDisplay($shipinfo->shipment_package_fee));
 		$html .= $this->getHtmlRowBE('WEIGHT_COUNTRIES_TAX', $taxDisplay);
@@ -231,9 +307,33 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 		$SQLfields = [
 			'id'                           => 'int(1) UNSIGNED NOT NULL AUTO_INCREMENT',
 			'virtuemart_order_id'          => 'int(11) UNSIGNED',
+
 			'order_number'                 => 'char(32)',
 			'virtuemart_shipmentmethod_id' => 'mediumint(1) UNSIGNED',
 			'shipment_name'                => 'varchar(5000)',
+
+            'delivery_type'          => 'int(11)',
+            'shipment_city'                => 'varchar(255)',
+            'shipment_city_id'                => 'varchar(255)',
+            'region_name'                => 'varchar(255)',
+            'country_name'                => 'varchar(255)',
+
+            // ID ПВЗ
+            'pickups'  => 'varchar(50)',
+            // Адрес ПВЗ
+            'pickups_name'  => 'varchar(255)',
+
+            // Улица -
+            'street'  => 'varchar(255)',
+            // Дом
+            'house'  => 'varchar(10)',
+            // Квартира
+            'flat'  => 'varchar(10)',
+
+
+
+
+
 			'order_weight'                 => 'decimal(10,4)',
 			'shipment_weight_unit'         => 'char(3) DEFAULT \'KG\'',
 			'shipment_cost'                => 'decimal(10,2)',
@@ -290,10 +390,37 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 		{
 			return null; // Another method was selected, do nothing
 		}
-		if ( !$this->selectedThisElement($method->shipment_element) )
+
+        if ( !$this->selectedThisElement($method->shipment_element) )
 		{
 			return false;
 		}
+
+        $app = \Joomla\CMS\Factory::getApplication();
+        $vm_sdekData = $app->input->get('vm_sdek' , [] , 'ARRAY' );
+
+        $values[ 'delivery_type' ] = $vm_sdekData['delivery_type'] ;
+        $values[ 'shipment_city' ] = $vm_sdekData['city_name'] ;
+        $values[ 'shipment_city_id' ] = $vm_sdekData['city_id'] ;
+
+        $values[ 'region_name' ] = $vm_sdekData['region_name'] ;
+        $values[ 'country_name' ] = $vm_sdekData['country_name'] ;
+
+        $values[ 'pickups' ] = $vm_sdekData['pickups'] ;
+        $values[ 'pickups_name' ] = $vm_sdekData['pickups_name'] ;
+
+
+        $values[ 'street' ] = $vm_sdekData['address_house']['street'] ;
+        $values[ 'house' ] = $vm_sdekData['address_house']['house'] ;
+        $values[ 'flat' ] = $vm_sdekData['address_house']['flat'] ;
+
+
+
+//        echo'<pre>';print_r( $vm_sdekData['delivery_type'] );echo'</pre>'.__FILE__.' '.__LINE__;
+//        die(__FILE__ .' '. __LINE__ );
+
+
+
 		$values[ 'virtuemart_order_id' ]          = $order[ 'details' ][ 'BT' ]->virtuemart_order_id;
 		$values[ 'order_number' ]                 = $order[ 'details' ][ 'BT' ]->order_number;
 		$values[ 'virtuemart_shipmentmethod_id' ] = $order[ 'details' ][ 'BT' ]->virtuemart_shipmentmethod_id;
@@ -302,15 +429,39 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 		$values[ 'shipment_weight_unit' ]         = $method->weight_unit;
 
 		$costs = $this->getCosts($cart, $method, $cart->cartPrices);
+
+
+
+
+
 		if ( !empty($costs) )
 		{
-			$values[ 'shipment_cost' ]        = $method->shipment_cost;
+			$values[ 'shipment_cost' ]        = $costs ;
 			$values[ 'shipment_package_fee' ] = $method->package_fee;
 		}
 		if ( empty($values[ 'shipment_cost' ]) ) $values[ 'shipment_cost' ] = 0.0;
 		if ( empty($values[ 'shipment_package_fee' ]) ) $values[ 'shipment_package_fee' ] = 0.0;
 
 		$values[ 'tax_id' ] = $method->tax_id;
+		$values[ 'shipment_name' ] = 'VMSdek';
+
+        $values[ 'id' ] = '';
+//        $values[ 'id' ] = '';
+
+//        $values = new stdClass();
+//        $values->id = '';
+//        $values->shipment_name = 'VMSdek';
+
+//        echo'<pre>';print_r( $vm_sdekData );echo'</pre>'.__FILE__.' '.__LINE__;
+//        echo'<pre>';print_r( $values );echo'</pre>'.__FILE__.' '.__LINE__;
+//        die(__FILE__ .' '. __LINE__ );
+//
+//        echo'<pre>';print_r( $values );echo'</pre>'.__FILE__.' '.__LINE__;
+//        echo'<pre>';print_r( $cart );echo'</pre>'.__FILE__.' '.__LINE__;
+//        echo'<pre>';print_r( $order );echo'</pre>'.__FILE__.' '.__LINE__;
+//        die(__FILE__ .' '. __LINE__ );
+
+
 		$this->storePSPluginInternalData($values);
 
 		return true;
@@ -346,10 +497,14 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 	 */
 	function plgVmDeclarePluginParamsShipmentVM3(&$data): bool
 	{
-		$app = \Joomla\CMS\Factory::getApplication();
+
+		$app = Factory::getApplication();
 		// Проверяем что находимся именно в режиме редактирования нужного метода (Доставка|Оплата)
 		if ( $app->isClient('administrator') && $this->_name == 'vmsdek' )
 		{
+            $doc = Factory::getDocument();
+            $doc->addStyleSheet('/plugins/vmshipment/vmsdek/assets/chosen/chosen.min.css');
+
 			$method = $this->getVmPluginMethod( $data->virtuemart_shipmentmethod_id );
 			Helper::addScriptOptionsMethodParams( $method );
 			Helper::addAssetsAdmin();
@@ -442,16 +597,17 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 		}
 	}
 
-	/**
-	 * Если в параметрах способа доставки установлено отображать на странице товара
-	 * и условия доставки допускают - добавляем в массив HTML для отображения.
-	 *
-	 * @param   TableProducts  $product                  Объект товара
-	 * @param   array          $productDisplayShipments  Массив с HTML для способов доставки
-	 *
-	 * @return false
-	 * @since 1.0.0
-	 */
+    /**
+     * Если в параметрах способа доставки установлено отображать на странице товара
+     * и условия доставки допускают - добавляем в массив HTML для отображения.
+     *
+     * @param TableProducts $product Объект товара
+     * @param array $productDisplayShipments Массив с HTML для способов доставки
+     *
+     * @return false
+     * @throws Exception
+     * @since 1.0.0
+     */
 	function plgVmOnProductDisplayShipment($product, &$productDisplayShipments)
 	{
 
@@ -534,7 +690,9 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 	 */
 	public function plgVmOnSelectedCalculatePriceShipment(VirtueMartCart $cart, array &$cart_prices, &$cart_prices_name)
 	{
-		return $this->onSelectedCalculatePrice($cart, $cart_prices, $cart_prices_name);
+       $CalculatePrice = $this->onSelectedCalculatePrice($cart, $cart_prices, $cart_prices_name);
+
+        return $CalculatePrice ; 
 	}
 
 	/**
@@ -565,6 +723,9 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 			return null;
 		}
 		$html = $this->getOrderShipmentHtml($virtuemart_order_id);
+
+
+
 
 		return $html;
 	}
@@ -676,11 +837,25 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 	 */
 	protected function renderPluginName($plugin)
 	{
-		$_extensionVersion = Helper::getExtensionVersion();
-		$doc = \Joomla\CMS\Factory::getDocument();
-		$doc->addStyleSheet('/plugins/vmshipment/vmsdek/assets/css/plg_vmshipment_vmsdek.core.css?v='.$_extensionVersion);
+        $app = Factory::getApplication();
+        $doc = Factory::getDocument();
 
-		Helper::initGnz11();
+        Helper::initGnz11();
+		$_extensionVersion = Helper::getExtensionVersion();
+
+
+        $cssFile = 'plg_vmshipment_vmsdek.core.min.css';
+        if ($plugin->debug_on)
+        {
+            $cssFile = 'plg_vmshipment_vmsdek.core.css';
+        }#END IF
+
+        $doc->addStyleSheet(Uri::root().'/plugins/vmshipment/vmsdek/assets/css/'.$cssFile.'?v='.$_extensionVersion ) ;
+
+        $doc->addStyleSheet('/plugins/vmshipment/vmsdek/assets/chosen/chosen.min.css');
+//        $doc->addScript('/plugins/vmshipment/vmsdek/assets/chosen/chosen.jquery.js');
+
+
 		Js::addJproLoad(Uri::root() . 'plugins/vmshipment/vmsdek/assets/js/plg_vmshipment_vmsdek.core.js?v='.$_extensionVersion);
 
 		static $c = array();
@@ -702,21 +877,51 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 			$htmlLogos = $this->displayLogos($logos);
 		}
 
-		$data = [
-			"_extensionVersion"            => $this->_extensionVersion,
-			// TODO - определять для (Оплата|Доставка)
-			"virtuemart_method_id" => $plugin->virtuemart_shipmentmethod_id,
-			"selectorInputElement"         => '#shipment_id_' . $plugin->virtuemart_shipmentmethod_id,
-			// -------------------------------------------
-			"element"                      => $plugin->element,
-			"folder"                       => $plugin->folder,
-			"type"                         => $plugin->type,
-			"_type"                        => $this->_type,
-			"method_name"                  => $plugin->{$plugin_name},
-			"description"                  => $plugin->{$plugin_desc},
-			"html_logos"                   => $htmlLogos,
+        $registry = new JRegistry();
+        $registry->loadObject($plugin);
+        $methodParams = $registry->toArray();
 
-		];
+        $SdekHelper = SdekHelper::instance( $methodParams );
+        $userState = $SdekHelper->getUserStateForm();
+
+        $PickupsCity = [] ;
+        // Если имеем ID города - закрузить офисы
+        if ( isset( $userState['city_id'] ) && !empty( $userState['city_id'] ) && $userState['city_id'] > 0  )
+        {
+            $PickupsObject  = $SdekHelper->getPickupsCity( $userState['city_id'] ) ;
+            $PickupsCity = $PickupsObject->items ;
+
+        }#END IF
+
+
+		$data = [
+            "_extensionVersion" => $this->_extensionVersion,
+            // Отладка
+            "debug_on" => $plugin->debug_on,
+            // TODO - определять для (Оплата|Доставка)
+            "virtuemart_method_id" => $plugin->virtuemart_shipmentmethod_id,
+            "selectorInputElement" => '#shipment_id_' . $plugin->virtuemart_shipmentmethod_id,
+            // -------------------------------------------
+            "element" => $plugin->element,
+            "folder" => $plugin->folder,
+            "type" => $plugin->type,
+            "_type" => $this->_type,
+            "method_name" => $plugin->{$plugin_name},
+            "description" => $plugin->{$plugin_desc},
+            "html_logos" => $htmlLogos,
+            // --------------------------------------------
+            'sdek_delivery_mode_pvz' => $plugin->sdek_delivery_mode_pvz ,
+            'sdek_delivery_mode_courier' => $plugin->sdek_delivery_mode_courier ,
+            // --------------------------------------------
+            'userState' => $userState ,
+            // --------------------------------------------
+            // --------------------------------------------
+            'PickupsCity' => $PickupsCity ,
+            // --------------------------------------------
+            "_nameSelectPickup" => $this->name_select_pickup,
+            "_nameHiddenOfficeId" => $this->name_hidden_office_id,
+            "_nameInputCityModal__autocomplete" => $this->name_input_city_modal__autocomplete,
+        ];
 		// Добавляем данные для JS скриптов
 		Helper::addScriptOptions($data);
 
@@ -739,7 +944,7 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 	 */
 	public function onAjaxVmsdek()
 	{
-		$app    = \Joomla\CMS\Factory::getApplication();
+		$app    = Factory::getApplication();
 		$task   = $app->input->get('task', 'testConnect', 'STRING');
 		$helperName = $app->input->get('helper', '\Vmsdek\Helper', 'STRING' );
 
@@ -750,10 +955,19 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 			// Получить настройки способа доставки
 			$method = (array) $this->getVmPluginMethod( $methodId );
 		}#END IF
+
+
+
+
 		/**
 		 * @var SdekHelper|Helper $Helper
 		 */
 		$Helper = $helperName::instance( $method );
+
+//        echo'<pre>';print_r( $method );echo'</pre>'.__FILE__.' '.__LINE__;
+//        echo'<pre>';print_r( $Helper );echo'</pre>'.__FILE__.' '.__LINE__;
+//        die(__FILE__ .' '. __LINE__ );
+
 
 		if ( !method_exists($Helper, $task) )
 		{
@@ -768,9 +982,7 @@ class plgVmshipmentVmsdek extends vmPSPlugin
 		{
 			// Executed only in PHP 5, will not be reached in PHP 7
 			echo 'Выброшено исключение: ', $e->getMessage(), "\n";
-			echo '<pre>';
-			print_r($e);
-			echo '</pre>' . __FILE__ . ' ' . __LINE__;
+			echo '<pre>'; print_r($e); echo '</pre>' . __FILE__ . ' ' . __LINE__;
 			die(__FILE__ . ' ' . __LINE__);
 		}
 

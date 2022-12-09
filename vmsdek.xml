@@ -11,6 +11,7 @@
         <folder>assets</folder>
         <folder>helpers</folder>
         <folder>language</folder>
+        <folder>libraries</folder>
         <folder>tmpl</folder>
         <filename>README.md</filename>
         <filename plugin="vmsdek">vmsdek.php</filename>
@@ -47,8 +48,194 @@
                     <option value="1">JYES</option>
                     <option value="0">JNO</option>
                 </field>
+                <!-- Скрипты для работы с внешними - API -->
+                <field name="api_script"
+                	type="text"
+                	default="sdek"
+                	class="api_script "
+                	size="20"
+                	readonly="1"
+                	required="1"
+                	label="VMSDEK_API_SCRIPT"
+                	description="VMSDEK_API_SCRIPT_DESC"
+                	showon=""
+                	hint=""
+                	pattern="[A-Za-z\s0-9]+"
+                	filter="raw" />
+
             </fieldset>
+            <fieldset name="api_config">
+				<field name="ip_ver"
+					   type="text"
+					   default="v2.0"
+					   class="ip_ver "
+					   size="20"
+					   readonly="1"
+					   required="1"
+					   label="VMSDEK_IP_VER"
+					   description="VMSDEK_IP_VER_DESC"
+					   showon=""
+					   hint=""
+					   pattern="[A-Za-z\s0-9.]+"
+					   filter="raw"/>
+				<!--Login Api SDEK -->
+				<field name="sdek_api_login"
+					   type="text"
+					   default=""
+					   class="sdek_api_login "
+					   size="20"
+					   readonly=""
+					   required=""
+					   label="VMSDEK_SDEK_API_LOGIN"
+					   description="VMSDEK_SDEK_API_LOGIN_DESC"
+					   showon=""
+					   hint=""
+					   pattern=""
+					   filter="raw"/>
+				<!-- Пароль Api SDEK -->
+				<field name="sdek_api_pass"
+					   type="text"
+					   default=""
+					   class="sdek_api_pass "
+					   size="20"
+					   readonly=""
+					   required=""
+					   label="VMSDEK_SDEK_API_PASS"
+					   description="VMSDEK_SDEK_API_PASS_DESC"
+					   showon=""
+					   hint=""
+					   pattern=""
+					   filter="raw"/>
+				<!-- Город отправления * -->
+				<field name="sender_city"
+					   type="text"
+					   default=""
+					   class="sender_city "
+					   size="20"
+					   readonly=""
+					   required="1"
+					   label="VMSDEK_SENDER_CITY"
+					   description="VMSDEK_SENDER_CITY_DESC"
+					   showon=""
+					   hint=""
+					   pattern=""
+					   filter="raw"/>
+				<!-- Режимы доставки ПВЗ -->
+				<field name="sdek_delivery_mode_pvz"
+					   type="list"
+					   default="4"
+					   required=""
+					   label="VMSDEK_SDEK_DELIVERY_MODE_DEFAULT"
+					   description="VMSDEK_SDEK_DELIVERY_MODE_DEFAULT_DESC"
+					   class="sdek_delivery_mode_default "
+					   multiple="false"
+					   readonly=""
+					   showon=""
+					   filter="raw">
+					<option value="2">VMSDEK_SDEK_DELIVERY_MODE_DEFAULT_DOOR_WAREHOUSE</option>
+					<option value="4">VMSDEK_SDEK_DELIVERY_MODE_DEFAULT_WAREHOUSE_WAREHOUSE</option>
+					<!--						<option value="6">VMSDEK_SDEK_DELIVERY_MODE_DEFAULT_DOOR_POSTAMAT</option>-->
+					<!--						<option value="7">VMSDEK_SDEK_DELIVERY_MODE_DEFAULT_WAREHOUSE_POSTAMAT</option>-->
+				</field>
+				<!-- Режимы доставки к двери -->
+				<field name="sdek_delivery_mode_courier"
+					   type="list"
+					   default="3"
+					   required=""
+					   label="VMSDEK_SDEK_DELIVERY_MODE_COURIER"
+					   description="VMSDEK_SDEK_DELIVERY_MODE_COURIER_DESC"
+					   class="sdek_delivery_mode_courier "
+					   multiple="false"
+					   readonly=""
+					   showon=""
+					   filter="raw">
+					<option value="1">VMSDEK_SDEK_DELIVERY_MODE_DEFAULT_DOOR_DOOR</option>
+
+					<option value="3">VMSDEK_SDEK_DELIVERY_MODE_DEFAULT_WAREHOUSE_DOOR</option>
+				</field>
+
+
+				<field name="sender_city_id"
+					   type="text"
+					   default=""
+					   class="sender_city_id "
+					   size="20"
+					   readonly="1"
+					   required="1"
+					   label="VMSDEK_SENDER_CITY_ID"
+					   description="VMSDEK_SENDER_CITY_ID_DESC"
+					   showon=""
+					   hint=""
+					   pattern=""
+					   filter="raw"/>
+				<field name="sender_office"
+					   type="list"
+					   default=""
+					   required="1"
+					   label="VMSDEK_SENDER_OFFICE"
+					   description="VMSDEK_SENDER_OFFICE_DESC"
+					   class="sender_office "
+					   multiple="false"
+					   readonly=""
+					   showon=""
+					   filter="raw">
+					<option value="">Please Select</option>
+
+				</field>
+				<field name="sender_office_id"
+					   type="text"
+					   default=""
+					   class="sender_office_id "
+					   size="20"
+					   readonly="1"
+					   required="1"
+					   label="VMSDEK_SENDER_OFFICE_ID"
+					   description="VMSDEK_SENDER_OFFICE_ID_DESC"
+					   showon=""
+					   hint=""
+					   pattern="[A-Za-z\s0-9]+"
+					   filter="raw"/>
+
+
+			</fieldset>
+			<fieldset name="hidden_fields" >
+				<field name="name_select_pickup"
+					type="hidden"
+					default="\[vm_sdek\]pickups"
+					class="name_select_pickup "
+					filter="raw" />
+				<field name="name_select_element_pickup"
+					type="text"
+					default="\[vm_sdek\]pickups"
+					class="name_select_element_pickup "
+					readonly="1"
+					required="1"
+					label="VMSDEK_NAME_SELECT_ELEMENT_PICKUP"
+					description="VMSDEK_NAME_SELECT_ELEMENT_PICKUP_DESC"
+					showon=""
+					hint=""
+					pattern=""
+					filter="raw" />
+
+				<field name="packaging_cost"
+					type="text"
+					default="30"
+					class="packaging_cost "
+					size="20"
+					readonly=""
+					required=""
+					label="VMSDEK_PACKAGING_COST"
+					description="VMSDEK_PACKAGING_COST_DESC"
+					showon=""
+					hint=""
+					pattern="[0-9.]+"
+					filter="raw" />
+					
+					
+					
+			</fieldset>
         </fields>
+
     </vmconfig>
     <!-- END Virtuemart Config -->
 </extension>

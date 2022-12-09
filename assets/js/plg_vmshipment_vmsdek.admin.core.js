@@ -53,13 +53,22 @@ window.plg_Vmshipment_Vmsdek_Admin_Core = function () {
         this.addEvtListener();
         // Перехват событий JoomlaSubmit 
         this.JoomlaSubmitInit();
-        
+
+        this.LoadScriptElement();
+
         console.log( 'plg_vmshipment_vmsdek.admin.core' , this._params );
 
         
-        // тестирования связи с сервером PlgVmshipmentVmsdekCore.testAjax()
+        // тестирования связи с сервером PlgVmshipmentVmsdekAdminCore.testAjax()
         // для запуска из консоли 
         // this.testAjax();
+    }
+    /**
+     * Дозагрузка файла скрипта plg_script_vmsdek
+     * @constructor
+     */
+    this.LoadScriptElement = function () {
+        self.load.js('/plugins/vmshipment/vmsdek/assets/js/plg_script_vmsdek.admin.js?v='+this._params._extensionVersion );
     }
     /**
      * Метод тестирования связи с сервером
